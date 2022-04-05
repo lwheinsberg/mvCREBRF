@@ -1,8 +1,7 @@
 Code Repository for Multivariate Analysis
 ================
-Jerry Z. Zhang, Lacey W. Heinsberg, and Daniel E. WeeksDepartment of
-Human GeneticsUniversity of Pittsburgh
-April 05, 2022
+Jerry Z. Zhang, Lacey W. Heinsberg, and Daniel E. Weeks<br/>Department
+of Human Genetics<br/>University of Pittsburgh
 
 
 

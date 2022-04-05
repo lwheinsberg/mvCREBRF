@@ -1,10 +1,9 @@
 ---
 title: "Code Repository for Multivariate Analysis"
 author: 
- - Jerry Z. Zhang, Lacey W. Heinsberg, and Daniel E. Weeks
- - Department of Human Genetics
+ - Jerry Z. Zhang, Lacey W. Heinsberg, and Daniel E. Weeks<br/>
+ - Department of Human Genetics<br/>
  - University of Pittsburgh
-date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
   github_document:
   html_preview: false
