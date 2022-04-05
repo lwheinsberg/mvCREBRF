@@ -1,0 +1,3 @@
+## af is the allele freq for A
+rs	 A	 B	 af 	 chr 	 pos
+rs373863828	A	G	0.268	0	1

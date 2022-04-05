@@ -1,0 +1,309 @@
+---
+title: "Multivariate Analysis Publication Code Part 1: mvBIMBAM"
+author: 
+ - Jerry Z. Zhang, Lacey W. Heinsberg, and Daniel E. Weeks
+ - Department of Human Genetics
+ - University of Pittsburgh
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  github_document:
+  html_preview: false
+  toc: true
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+    number_sections: true
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '5'
+    code_folding: show
+header-includes: 
+  - \renewcommand{\and}{\\}
+---
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+require(knitr)
+```
+
+# Overview
+
+Copyright 2022, University of Pittsburgh. All Rights Reserved.        
+License: CC BY-SA 3.0 ([link](https://creativecommons.org/licenses/by-sa/3.0/))     
+
+
+Here we illustrate how we carried out the mvBIMBAM analyses. 
+
+Please see our README.md for instructions on installing mvBIMBAM and notes about this example code. 
+
+# Load libraries
+
+Load the libraries needed to run the code. 
+
+```{r load_libraries2, message=FALSE, warning=FALSE}
+library(tidyverse)
+select = dplyr::select
+library(ggplot2)
+library(preprocessCore)
+library(pander)
+library(stringr)
+```
+
+# Prepare data for mvBIMBAM
+
+As with many programs (e.g., PLINK), mvBIMBAM requires the data to be in a specific format for analysis. In this section of the example code, we are preparing and formatting the data for analysis.
+
+## Read in the synthetic data set 
+
+Please see the README.md for information regarding the example synthetic data set and pre-processing instructions if you will be adapting this code to perform the analyses in your own data set.
+
+```{r load_data}
+# Read in the synthetic data set created for use with this example analysis code
+df_synth <- readRDS("git_synth_data.rds")
+
+# Define the phenotypes of interest
+# Anthropometry
+anthro.traits <- c("BMI", "Height", "Weight", "FFM", "FM", "WHR", "Abd_Circ", "Hip_Circ")
+# Lipids
+lipids.traits <- c("HDL_C", "NetTG", "Cholesterol")
+# Both
+all.traits <- c(anthro.traits, lipids.traits)
+
+# Phenotype abbreviations
+# BMI=body mass index; FFM=fat-free mass; FM=fat mass; WHR=waist hip ratio; 
+# Abd_Circ=abdominal circumference; Hip_Circ=hip circumference; 
+# HDL_C=HDL cholesterol; NetTG=net triglycerides
+```
+
+In this example, we are preparing to analyze 'all.traits'.
+
+## Clean up data
+
+```{r prep}
+# Create data frames for regressing out covariates 
+# Note: Currently, mvBIMBAM does not allow missing phenotypes for the 
+# multivariate phenotype analysis, so select complete cases only
+# The first data frame (df_i1_regress) contains all variables of interest ordered 
+# and filtered for complete cases
+df_i1_regress <- df_synth %>% 
+  select(rs373863828, all_of(all.traits), Dec_Age, Gender) %>%
+  filter(complete.cases(.))
+# The second data frame (df_i1) contains all variables except the covariates that
+# will be regressed out (in this example, age and gender)
+df_i1 <- df_synth %>% 
+  select(rs373863828, all_of(all.traits)) %>% 
+  filter(complete.cases(.))
+
+# Recode 0, 1, 2 genotypes to AA, AG, GG for later use in mvBIMBAM 
+df_synth <- df_synth %>% mutate(rs373863828_C = case_when(
+                                    rs373863828 == 2 ~ "AA",
+                                    rs373863828 == 1 ~ "AG",
+                                    rs373863828 == 0 ~ "GG"))
+
+# Create Genotype (G) and Phenotype (Y) matrices
+G <- as.matrix(df_i1 %>% select(rs373863828))
+Y <- as.matrix(df_i1 %>% select(all_of(all.traits)))
+```
+
+## Normalize and adjust data for covariates 
+
+In this example, we are adjusting our phenotypes of interest for the covariates age and sex (labeled as "gender" in this synthetic data set) using ordinary linear regression models. 
+
+As described in the paper, the sensitivity of the Bayesian multivariate mvBIMBAM framework to outlier values and non-normality also necessitates the normalization of phenotypes. As shown below, residualized phenotypes (i.e., adjusted for age/sex) are order quantile-normalized. 
+
+```{r normalize_adjust_functions}
+# Create a function to perform residual adjustment for covariates (in this example,
+# we are adjusting for age and gender)
+f_quantile_norm_resid <- function(Y, df) {
+  {o = apply(Y, 2, function(x) resid(lm(x ~ Dec_Age + Gender, data = df)))}
+  return(o)
+}
+
+# Create function to 'super quantile normalize' the data 
+f_quantile_normalize_adjust <- function(Y, data, ...) {
+  # Quantile normalize
+  Y_qn = normalize.quantiles(Y)
+  # Fit Y ~ Age + Gender, extra residual (using function created above)
+  Y_qn_resid = f_quantile_norm_resid(Y = Y_qn, df = data, ...) 
+  # Quantile normalize the residual
+  Y_qn_resid_qn = data.frame(normalize.quantiles(Y_qn_resid))
+  return(Y_qn_resid_qn)
+}
+```
+
+```{r normalize_adjust}
+# Create a quantile normalized adjusted Y data frame (i.e., quantile normalization 
+# and covariate adjustment is performed in one fell swoop)
+qn_resid_Y <- f_quantile_normalize_adjust(Y, data = df_i1_regress)
+# Create a copy of this data frame for use later in this workflow 
+qn_resid_Y_b <- qn_resid_Y 
+# Rename the columns of the quantile normalized data frame to match the 
+# phenotypes of interest  
+names(qn_resid_Y) <- all.traits
+```
+
+## Remove outliers 
+
+Observations in violation of multivariate normality at an alpha=0.01 level based on Mahalanobis distance-based test statistics are now removed to avoid spurious conclusions.  
+
+```{r outliers_function}
+# Create a function to calculate Mahalanobis distance
+getMD <- function(x) {
+  Sx <- cov(x)
+  m <- mahalanobis(x, colMeans(x), Sx)
+  return(m)
+}
+```
+
+```{r outliers}
+# Drop individuals with data violating multivariate normality at alpha = 0.01
+i_keep <- which(pchisq(getMD(qn_resid_Y_b), df = dim(Y)[2]) > 0.01)
+```
+
+```{r sample_summary}
+# Record sample sizes in a summary table
+table1 <- data.frame(study=rep(NA,1),N.traits=NA,N.total=NA,N.used=NA)
+i <- 1
+table1[i,"study"] <- "Synthetic Cohort - All Traits"
+table1[i,"N.total"] <- nrow(qn_resid_Y)
+table1[i,"N.used"]  <- nrow(qn_resid_Y[i_keep, ])
+table1[i,"N.traits"] <- ncol(qn_resid_Y)
+table1[i,]
+
+cat(dim(Y)[1] - length(i_keep), " Obs removed due to violation of MV-Normality")
+```
+
+## Prepare final files for mvBIMBAM
+
+```{r prepare_final_files}
+# Write phenotypes to a text file for use in mvBIMBAM 
+if (!dir.exists("./inputs")) {
+  dir.create("./inputs")
+}
+write.table(round(qn_resid_Y[i_keep,], 8), 
+            "./inputs/synthetic_pheno_bimbam.txt", sep = " ", 
+            row.names = F, col.names = F)
+
+# Refine genotype data for mvBIMBAM and write file
+Geno_write <- df_synth %>% select(rs373863828_C, all_of(all.traits)) %>%
+  filter(complete.cases(.)) %>%
+  select(rs373863828_C) %>%
+  {.[i_keep,]}
+Geno_String <- paste0(unlist(c(Geno_write)), collapse = ",")
+Geno_String <- paste0("rs373863828,",Geno_String, collapse = "")
+Geno_String <- paste0(length(Geno_write), "\n", 1, "\n",Geno_String,"\n")
+# Write genotypes (no need to rewrite geno input file)
+writeLines(Geno_String, con = "./inputs/synthetic_geno_bimbam.txt", sep = "")
+```
+
+# mvBIMBAM analyses
+
+As described in our paper, the association of rs373863828 with a panel of correlated phenotypes was performed with the Bayesian multivariate mvBIMBAM framework, which we will now apply to the synthetic data set we are working with. 
+
+In the mvBIMBAM framework, a global null model representing no association between phenotypes and genotype is compared with an exhaustive combination of alternative models, in which all different combinations of phenotypes are associated with the genotype. For the alternative models, the mvBIMBAM methodology splits phenotypes into all possible partitions of U, D, and I, each representing ‘unassociated', ‘directly’, and ‘indirectly’ associated. 
+
+Call system() to run mvBIMBAM. 
+
+```{r bimbamRun, echo=FALSE}
+# Call system() to run mvBIMBAM by specifying settings for analysis using 
+# the following options: 
+# -g: location of the genotype data (./inputs/synthetic_geno_bimbam.txt)
+# -p: location of the phenotype data (./inputs/synthetic_pheno_bimbam.txt)
+# -o: prefix for output files (bimbam_out)
+# -f: number of phenotypes to analyze (length(all.traits))
+# -A: indicate multiple values for sigma (see mvBIMBAM manual for more details)
+# -mph1 vs. mph2: analysis settings (see mvBIMBMAM manual for more details)
+call <- paste0("bimbam -g ./inputs/synthetic_geno_bimbam.txt -p ./inputs/synthetic_pheno_bimbam.txt -o bimbam_out -mph 2 -f ", length(all.traits), " -A 0.05 -A 0.1 -A 0.2 -A 0.4")
+print(call)
+# Please note that this can take a few minutes
+system(call, intern = TRUE)
+```
+
+```
+bimbam -g ./inputs/synthetic_geno_bimbam.txt -p ./inputs/synthetic_pheno_bimbam.txt 
+-o bimbam_out -mph 2 -f 11 -A 0.05 -A 0.1 -A 0.2 -A 0.4
+```
+
+# Results
+## Bayes factors (BF)
+
+The evidence against the null hypothesis is the sum of Bayes factors (BF) (log10 scale) of all partitions weighted by a diffuse prior. 
+
+Note the code here has been annotated, but more detailed documentation can be found in the [mvBIMBAM](https://github.com/heejungshim/mvBIMBAM/blob/master/doc/mvBIMBAM_Manual.pdf) documentation on GitHub.
+
+```{r BF, warning=FALSE}
+# Read in the mvBIMBAM Bayes Factor output file 
+s <- readLines("./output/bimbam_out.mph.BFs.txt")
+# Clean up file for use 
+# Note: We can ignore these NA coercion warnings
+m1 <- matrix(na.omit(as.numeric(str_split(s, " ")[[1]])), nrow = 1) 
+colnames(m1) = c("BF", "BF_All_Partition", all.traits)
+```
+
+```{r BF_results}
+# View results
+pander(m1, digits = 4, caption = "Bayes Factors: Synthetic Cohort, All Traits")
+```
+
+A note about interpretation: The above table presents the log10 BF for each trait. Strong evidence of association is defined as log10 BF > 5; suggestive evidence is defined as 1.5 < log10 BF < 5; and negligible evidence is defined as log10 BF < 1.5. 
+
+## Bayesian posterior probabilities of association 
+
+In addition to log10 BFs, probabilities for no association, direct association, and indirect association are given as output while marginal posterior probabilities of association (MPPA) are calculated by summing the marginal posterior probabilities of direct and indirect association.
+
+```{r probabilities, warning=F}
+# Read in the mvBIMBAM probability output file 
+s <- readLines("./output/bimbam_out.mph.prob.txt")
+# Clean up file for use 
+m2 <- matrix(na.omit(as.numeric(str_split(s, " ")[[1]])), nrow = 2)
+m2 <- rbind(m2, 1 - (m2[1,] + m2[2,]))
+colnames(m2) <- all.traits
+rownames(m2) <- c("Unassociated", "Directly", "Indirectly")
+```
+
+```{r probabilities_results}
+pander(m2, digits = 4, caption = "Bayesian Probabilities: Synthetic Cohort, All Traits")
+```
+
+A note about interpretation: The numbers above can be interpreted as the probability of no association, direct association, or indirect association, which together sum to 1 (i.e., 100%). 
+
+Both directly and indirectly associated phenotypes are associated with genotype, but indirectly associated phenotypes are conditionally independent of the genotype given the presence of a directly associated phenotype in the model. 
+
+For example, in this synthetic data set, there is a suggested <1% probability that there is no association between the variant of interest (rs373863828) and weight, a 43.2% probability that rs373863828 directly impacts weight, and a 56.8% probability that rs373863828 indirectly impacts weight conditional on another phenotype within the dataset. This is supported by a log10 BF>5 (see BF in Table 2 above), which provides suggests strong evidence of association. 
+
+## Sample size summary table
+
+Finally, we will create a table summarizing the nunmber of traits examined (N.traits), the total number of participants in the data set (N.total), the number of participants that were included in the analysis (N.used), the number of participants dropped (N.removed), and the percentage of participants removed (Percent.removed).
+
+```{r sample_size}
+system("wc inputs/*pheno*.txt", intern = TRUE)
+```
+
+```{r sample_size_table, echo=FALSE}
+table1$N.removed <- table1$N.total - table1$N.used
+table1$Percent.removed <- round(100*table1$N.removed/table1$N.total,2)
+pander(table1,caption="Sample sizes")
+```
+
+# Save data and results
+
+To conclude, save (1) the quantile normalized adjusted data file and (2) the Bayes factors from the mvBIMBAM results as these data are used in the second markdown that provides example code to construct the Bayesian networks using bnlearn. 
+
+## Quantile normalized data file for use in bnlearn
+
+```{r}
+# Write data for bnlearn
+saveRDS(data.frame(rs373863828 = Geno_write, round(qn_resid_Y[i_keep,], 8)), file = "SyntheticQuantNorm.rds")
+```
+
+## mvBIMBAM BFs
+
+```{r save_results}
+save(m1, m2, table1, file = "mvBimBam_Results.RDdata")
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
