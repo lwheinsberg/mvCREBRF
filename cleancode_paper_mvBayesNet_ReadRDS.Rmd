@@ -48,14 +48,12 @@ library(tidyverse)
 library(lme4)
 library(bnlearn)
 library(parallel)
-# The 'graph' package has been archived from CRAN
-# To install use 
-#if (!require("BiocManager", quietly = TRUE))
-#install.packages("BiocManager")
-#BiocManager::install("graph")
+# The 'graph' package is a Bioconductor package.
 library(graph)
 library(pander)
 library(ggnetwork)
+# The 'Rgraphviz' is a Bioconductor packaage.
+library(Rgraphviz)
 ```
 
 # Read in the synthetic dataset

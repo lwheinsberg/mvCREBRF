@@ -43,6 +43,7 @@ Load the libraries needed to run the code.
 library(tidyverse)
 select = dplyr::select
 library(ggplot2)
+# The 'preprocessCore' is a Bioconductor package
 library(preprocessCore)
 library(pander)
 library(stringr)
