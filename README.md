@@ -129,6 +129,16 @@ and
 
 These files also include notes about interpretation of the results.
 
+Compiled versions of these, complete with output and figures, can be found in these Markdown files:
+
+[01_phenotypes_mvBIMBAM_run.md](https://github.com/lwheinsberg/mvCREBRF/blob/master/01_phenotypes_mvBIMBAM_run.md)
+
+and
+
+[02_mvBayesNet_ReadRDS.md](https://github.com/lwheinsberg/mvCREBRF/blob/master/02_mvBayesNet_ReadRDS.md)
+
+or in the corresponding PDF files.
+
 # Contact information
 
 If you have any questions or comments, please feel free to contact us.
