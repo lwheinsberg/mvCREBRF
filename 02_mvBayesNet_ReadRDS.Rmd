@@ -35,7 +35,7 @@ Here we illustrate how we estimated our Bayesian Networks.
 
 As laid out in our README.md, this .Rmd file builds upon another example .Rmd file 
 
-`cleancode_paper_phenotypes_mvBIMBAM_run.Rmd`, 
+`01_phenotypes_mvBIMBAM_run.Rmd`, 
 
 which will need to be ran first as it creates two data files that are read in below.  
 
@@ -60,7 +60,7 @@ library(Rgraphviz)
 
 Please see the README.md for information regarding the example synthetic data set and pre-processing instructions if you will be adapting this code to perform the analyses in your own data set.
 
-As detailed in the README.md and demonstrated in `cleancode_paper_phenotypes_mvBIMBAM_run.Rmd`, the synthetic phenotype data created for this example .Rmd were adjusted for age and sex, quantile normalized, and outliers were removed. The quantile normalized adjusted data set is read in below. 
+As detailed in the README.md and demonstrated in `01_phenotypes_mvBIMBAM_run.Rmd`, the synthetic phenotype data created for this example .Rmd were adjusted for age and sex, quantile normalized, and outliers were removed. The quantile normalized adjusted data set is read in below. 
 
 ```{r load-data}
 # Read in the quantile normalized adjusted synthetic data set 
@@ -98,7 +98,7 @@ Here we will analyze all traits which are loaded into the 'traits' object.
 
 # Bayesian Network estimation
 
-As described in our paper, we further explored the relationships between the variant and the correlated phenotypes of interest with a Bayesian network learned using the R package bnlearn. The final quantile normalized data (created in `cleancode_paper_phenotypes_mvBIMBAM_run.Rmd` and loaded above) are used to learn the Bayesian networks. 
+As described in our paper, we further explored the relationships between the variant and the correlated phenotypes of interest with a Bayesian network learned using the R package bnlearn. The final quantile normalized data (created in `01_phenotypes_mvBIMBAM_run.Rmd` and loaded above) are used to learn the Bayesian networks. 
 
 ## Define function to fit the model 
 

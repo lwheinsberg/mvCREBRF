@@ -1,6 +1,6 @@
 ## 
 ## COMMAND: bimbam -g ./inputs/synthetic_geno_bimbam.txt -p ./inputs/synthetic_pheno_bimbam.txt -o bimbam_out -mph 2 -f 11 -A 0.05 -A 0.1 -A 0.2 -A 0.4 
-## randseed = 1649193034
+## randseed = 1649429738
 ## BIMBAM: Number of position files = 0
 ## BIMBAM: Position files contain 0 records.
 ## BIMBAM: File 0 has 1356 ind's and 1 SNPs

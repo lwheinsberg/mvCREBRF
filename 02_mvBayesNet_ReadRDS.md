@@ -16,7 +16,7 @@ Here we illustrate how we estimated our Bayesian Networks.
 As laid out in our README.md, this .Rmd file builds upon another example
 .Rmd file
 
-`cleancode_paper_phenotypes_mvBIMBAM_run.Rmd`,
+`01_phenotypes_mvBIMBAM_run.Rmd`,
 
 which will need to be ran first as it creates two data files that are
 read in below.
@@ -35,14 +35,12 @@ library(tidyverse)
 library(lme4)
 library(bnlearn)
 library(parallel)
-# The 'graph' package has been archived from CRAN
-# To install use 
-#if (!require("BiocManager", quietly = TRUE))
-#install.packages("BiocManager")
-#BiocManager::install("graph")
+# The 'graph' package is a Bioconductor package.
 library(graph)
 library(pander)
 library(ggnetwork)
+# The 'Rgraphviz' is a Bioconductor packaage.
+library(Rgraphviz)
 ```
 
 # Read in the synthetic dataset
@@ -52,10 +50,10 @@ data set and pre-processing instructions if you will be adapting this
 code to perform the analyses in your own data set.
 
 As detailed in the README.md and demonstrated in
-`cleancode_paper_phenotypes_mvBIMBAM_run.Rmd`, the synthetic phenotype
-data created for this example .Rmd were adjusted for age and sex,
-quantile normalized, and outliers were removed. The quantile normalized
-adjusted data set is read in below.
+`01_phenotypes_mvBIMBAM_run.Rmd`, the synthetic phenotype data created
+for this example .Rmd were adjusted for age and sex, quantile
+normalized, and outliers were removed. The quantile normalized adjusted
+data set is read in below.
 
 ``` r
 # Read in the quantile normalized adjusted synthetic data set 
@@ -97,9 +95,8 @@ object.
 As described in our paper, we further explored the relationships between
 the variant and the correlated phenotypes of interest with a Bayesian
 network learned using the R package bnlearn. The final quantile
-normalized data (created in
-`cleancode_paper_phenotypes_mvBIMBAM_run.Rmd` and loaded above) are used
-to learn the Bayesian networks.
+normalized data (created in `01_phenotypes_mvBIMBAM_run.Rmd` and loaded
+above) are used to learn the Bayesian networks.
 
 ## Define function to fit the model
 
@@ -869,9 +866,7 @@ results <- f_run_plot_graph(data = df_synth, k = 5, alpha = 0.05, ncluster = 10)
     ## min strength > threshold:  0.64 
     ## strength:  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0.04 0.04 0.04 0.08 0.08 0.08 0.08 0.12 0.12 0.12 0.12 0.16 0.16 0.16 0.16 0.16 0.16 0.2 0.2 0.36 0.36 0.64 0.64 0.72 0.72 0.72 0.72 0.8 0.8 0.88 0.88 0.92 0.92 0.96 0.96 0.96 0.96 0.96 0.96 0.96 0.96 0.96 0.96 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
 
-    ## Loading required namespace: Rgraphviz
-
-![](cleancode_paper_mvBayesNet_ReadRDS_files/figure-gfm/RunPlotGraph-1.png)<!-- -->
+![](02_mvBayesNet_ReadRDS_files/figure-gfm/RunPlotGraph-1.png)<!-- -->
 
 ### Labeled high-strength graph
 
@@ -914,7 +909,7 @@ redraw.graph.labels(
 )
 ```
 
-![](cleancode_paper_mvBayesNet_ReadRDS_files/figure-gfm/high-strength-1.png)<!-- -->
+![](02_mvBayesNet_ReadRDS_files/figure-gfm/high-strength-1.png)<!-- -->
 
 ``` r
 # Visualize strengths/directions as a table 
@@ -977,7 +972,7 @@ redraw.label.ggnet(results$averaged2,
                    df_bayes = df_bayes_expand)
 ```
 
-![](cleancode_paper_mvBayesNet_ReadRDS_files/figure-gfm/redraw_bw-1.png)<!-- -->
+![](02_mvBayesNet_ReadRDS_files/figure-gfm/redraw_bw-1.png)<!-- -->
 
 A note about interpretation: In this example figure, we see direct
 associations between the rs373863828 and weight and BMI with indirect
@@ -1026,7 +1021,7 @@ sessioninfo::session_info()
 ```
 
     ## ─ Session info  ──────────────────────────────────────────────────────────────
-    ##  hash: bow and arrow, name badge, broccoli
+    ##  hash: flag: St. Barthélemy, keycap: 8, person running: medium-dark skin tone
     ## 
     ##  setting  value
     ##  version  R version 4.1.2 (2021-11-01)
@@ -1037,7 +1032,7 @@ sessioninfo::session_info()
     ##  collate  en_US.UTF-8
     ##  ctype    en_US.UTF-8
     ##  tz       America/New_York
-    ##  date     2022-04-05
+    ##  date     2022-04-08
     ##  pandoc   2.14.0.3 @ /usr/lib/rstudio-server/bin/pandoc/ (via rmarkdown)
     ## 
     ## ─ Packages ───────────────────────────────────────────────────────────────────
@@ -1101,7 +1096,7 @@ sessioninfo::session_info()
     ##  readr        * 2.1.0    2021-11-11 [2] CRAN (R 4.1.2)
     ##  readxl         1.3.1    2019-03-13 [2] CRAN (R 4.1.2)
     ##  reprex         2.0.1    2021-08-05 [2] CRAN (R 4.1.2)
-    ##  Rgraphviz      2.38.0   2021-10-26 [2] Bioconductor
+    ##  Rgraphviz    * 2.38.0   2021-10-26 [2] Bioconductor
     ##  rlang          0.4.12   2021-10-18 [2] CRAN (R 4.1.2)
     ##  rmarkdown      2.11     2021-09-14 [2] CRAN (R 4.1.2)
     ##  rstudioapi     0.13     2020-11-12 [2] CRAN (R 4.1.2)

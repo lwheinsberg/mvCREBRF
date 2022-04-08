@@ -14,7 +14,7 @@ License: CC BY-SA 3.0
 This repository contains example R markdown analysis code used for
 “Multivariate analysis of a missense variant in CREBRF reveals
 association with measures of regional and total adiposity in people of
-Polynesian ancestries” (@bioRxiv link).
+Polynesian ancestries” \[LINK TO PAPER TO BE ADDED WHEN AVAILABLE\].
 
 The purpose of this paper was to improve our understanding of a missense
 variant in CREBRF, rs373863828, that is paradoxically associated with
@@ -33,7 +33,7 @@ While the Samoan data analyzed in our paper are available via dbGAP
 ([link](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000914.v1.p1)),
 a synthetic simulated data set has been created for immediate use with
 the example analysis code. The synthetic data set was created using
-[synthpop](https://cran.r-project.org/web/packages/synthpop/index.html)
+[`synthpop`](https://cran.r-project.org/web/packages/synthpop/index.html)
 to emulate correlation structures found within one of the cohorts
 studied in the paper. The data are wholly synthetic and contain no
 observations from the actual study.
@@ -53,20 +53,24 @@ set:
     age, gender, ancestry principal components, etc).
 
 The example analysis code is presented as two R Markdown files: (1)
-`cleancode_paper_phenotypes_mvBIMBAM_run.Rmd` and (2)
-`cleancode_paper_mvBayesNet_ReadRDS.Rmd`.
+[`01_phenotypes_mvBIMBAM_run.Rmd`](./01_phenotypes_mvBIMBAM_run.Rmd) and
+(2) [`02_mvBayesNet_ReadRDS.Rmd`](./02_mvBayesNet_ReadRDS.Rmd).
+Alternatively, we have also provided typeset
+[`.md`](./01_phenotypes_mvBIMBAM_run.md) and
+[`.pdf`](./01_phenotypes_mvBIMBAM_run.pdf) versions of the files. Note
+that the `.md` versions contain results and are nicely readable online
+within the GitHub website.
 
-In `cleancode_paper_phenotypes_mvBIMBAM_run.Rmd`, we perform
-multivariate association analysis between rs373863828 and phenotypes of
-interest using [mvBIMBAM](https://github.com/heejungshim/mvBIMBAM), a
-Bayesian approach for joint genetic association analysis of multiple
-related phenotypes.
+In `01_phenotypes_mvBIMBAM_run.Rmd`, we perform multivariate association
+analysis between rs373863828 and phenotypes of interest using
+[mvBIMBAM](https://github.com/heejungshim/mvBIMBAM), a Bayesian approach
+for joint genetic association analysis of multiple related phenotypes.
 
-In `cleancode_paper_mvBayesNet_ReadRDS.Rmd`, we further study and plot
-the structure of the relationships between rs373863828 and phenotypes of
-interest using [bnlearn](https://www.bnlearn.com/), an R package
-developed to perform Bayesian network analyses. Note, the code within
-`cleancode_paper_mvBayesNet_ReadRDS.Rmd` was adapted from
+In `02_mvBayesNet_ReadRDS.Rmd`, we further study and plot the structure
+of the relationships between rs373863828 and phenotypes of interest
+using [bnlearn](https://www.bnlearn.com/), an R package developed to
+perform Bayesian network analyses. Note, the code within
+`02_mvBayesNet_ReadRDS.Rmd` was adapted from
 <http://www.bnlearn.com/research/genetics14/> under the Creative Commons
 Attribution-Share Alike License
 (<https://creativecommons.org/licenses/by-sa/3.0/>) which accompanies
@@ -75,9 +79,9 @@ by Scutari, Howell, Balding, Mackay (Genetics, 2014).
 
 # Dependencies
 
-The first R Markdown, `cleancode_paper_phenotypes_mvBIMBAM_run.Rmd`,
-relies on calling [mvBIMBAM](https://github.com/heejungshim/mvBIMBAM)
-using `base::system()`. This requires `bimbam` to be added to `$PATH` on
+The first R Markdown, `01_phenotypes_mvBIMBAM_run.Rmd`, relies on
+calling [mvBIMBAM](https://github.com/heejungshim/mvBIMBAM) using
+`base::system()`. This requires `bimbam` to be added to `$PATH` on
 Unix-like systems or `%PATH%` on Windows based systems as described at
 <https://github.com/heejungshim/mvBIMBAM>.
 
@@ -97,27 +101,31 @@ standalone Pandoc installation. With Pandoc installed,
 `rmarkdown::render()` can be used to execute and knit the .Rmd code.
 
 The synthetic data created for use with this code has been uploaded in
-this repository in the file `git_synth_data.rds`.
+this repository in the file
+[`git_synth_data.rds`](./git_synth_data.rds).
 
-The R Markdown `cleancode_paper_phenotypes_mvBIMBAM_run.Rmd` should be
-run first, as it creates a quantile normalized, covariate-adjusted, and
-outlier-free version of the synthetic data set and computes Bayes
-factors that are needed as input in the
-`cleancode_paper_mvBayesNet_ReadRDS.Rmd` R Markdown file.
+The R Markdown `01_phenotypes_mvBIMBAM_run.Rmd` should be run first, as
+it creates a quantile normalized, covariate-adjusted, and outlier-free
+version of the synthetic data set and computes Bayes factors that are
+needed as input in the `02_mvBayesNet_ReadRDS.Rmd` R Markdown file.
 
-The R Markdown `cleancode_paper_mvBayesNet_ReadRDS.Rmd` should be run
-second.
+The R Markdown `02_mvBayesNet_ReadRDS.Rmd` should be run second.
+
+Note that in `02_mvBayesNet_ReadRDS.Rmd`, the code for
+`f_run_plot_graph` assumes there are 10 processors available for
+parallel processing (ncluster = 10). Depending on the capabilities of a
+user’s machine, this may need to be adjusted.
 
 # Example run and interpretation
 
 Example analysis code has been carefully annotated in the R Markdown
 files
 
-`cleancode_paper_phenotypes_mvBIMBAM_run.Rmd`
+`01_phenotypes_mvBIMBAM_run.Rmd`
 
 and
 
-`cleancode_paper_mvBayesNet_ReadRDS.Rmd`.
+`02_mvBayesNet_ReadRDS.Rmd`.
 
 These files also include notes about interpretation of the results.
 
