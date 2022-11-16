@@ -15,8 +15,8 @@ This repository contains example R markdown analysis code used for
 “Multivariate analysis of a missense variant in CREBRF reveals
 association with measures of regional and total adiposity in people of
 Polynesian ancestries” 
-([published](https://onlinelibrary.wiley.com/doi/10.1002/gepi.22508))
-([pre-print](https://www.medrxiv.org/content/10.1101/2022.09.08.22279720v1))
+([published](https://onlinelibrary.wiley.com/doi/10.1002/gepi.22508) and
+[pre-print](https://www.medrxiv.org/content/10.1101/2022.09.08.22279720v1)).
 
 The purpose of this paper was to improve our understanding of a missense
 variant in CREBRF, rs373863828, that is paradoxically associated with
